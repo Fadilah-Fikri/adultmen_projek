@@ -6,6 +6,7 @@ import 'screen/register.dart';
 import 'screen/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:adultmen_uas/screen/admin/admin_dashboard_screen.dart';
+import 'package:adultmen_uas/screen/admin/manage_products_screen.dart';
 
 Future<void> main() async {
   // Pastikan Flutter binding sudah siap
@@ -35,6 +36,7 @@ class SemerbakHarumApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/home': (context) => HomeScreen(),
         '/admin_dashboard': (context) => AdminDashboardScreen(),
+        '/manage_products': (context) => ManageProductsScreen(),
       },
     );
   }
