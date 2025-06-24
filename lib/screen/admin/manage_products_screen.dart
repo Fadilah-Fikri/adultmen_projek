@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:adultmen_uas/screen/home_screen.dart'; // Kita pakai ulang model 'Fragrance'
+import 'package:adultmen_uas/screen/admin/add_edit_product_screen.dart'; // IMPORT HALAMAN FORM
+import 'package:adultmen_uas/screen/home_screen.dart'; //Kita pakai ulang model 'Fragrance'
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ManageProductsScreen extends StatefulWidget {
@@ -10,7 +11,6 @@ class ManageProductsScreen extends StatefulWidget {
 }
 
 class _ManageProductsScreenState extends State<ManageProductsScreen> {
-  // Gunakan Future untuk mengambil data produk
   late Future<List<Fragrance>> _productsFuture;
 
   @override
@@ -19,13 +19,12 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     _productsFuture = _fetchProducts();
   }
 
-  // Method untuk mengambil semua produk dari Supabase
   Future<List<Fragrance>> _fetchProducts() async {
     try {
       final data = await Supabase.instance.client
           .from('fragrances')
           .select()
-          .order('created_at', ascending: false); // Urutkan dari yang terbaru
+          .order('created_at', ascending: false);
 
       return List<Map<String, dynamic>>.from(data)
           .map((item) => Fragrance.fromJson(item))
@@ -41,7 +40,6 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
     }
   }
 
-  // Method untuk menghapus produk
   Future<void> _deleteProduct(String productId) async {
     try {
       await Supabase.instance.client
@@ -54,7 +52,6 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
           content: Text('Product deleted successfully'),
           backgroundColor: Colors.green,
         ));
-        // Refresh daftar produk setelah menghapus
         setState(() {
           _productsFuture = _fetchProducts();
         });
@@ -75,11 +72,19 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
       appBar: AppBar(
         title: const Text('Kelola Produk'),
       ),
-      // Tombol untuk menambah produk baru
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigasi ke halaman Add/Edit Product dalam mode 'Tambah'
-          print('Navigate to Add Product Screen');
+          // Navigasi ke halaman Add/Edit dalam mode 'Tambah' (tanpa productId)
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddEditProductScreen()),
+          ).then((result) {
+            // Jika halaman form ditutup dan mengembalikan nilai 'true' (artinya ada perubahan),
+            // maka kita refresh daftar produk.
+            if (result == true) {
+              setState(() { _productsFuture = _fetchProducts(); });
+            }
+          });
         },
         child: const Icon(Icons.add),
       ),
@@ -107,24 +112,33 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundImage: NetworkImage(product.imageUrl),
-                    onBackgroundImageError: (_, __) {}, // Handle image error
+                    onBackgroundImageError: (_, __) {},
                   ),
                   title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text('Rp ${product.price.toStringAsFixed(0)}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // --- TOMBOL EDIT DIPERBARUI ---
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue.shade700),
                         onPressed: () {
-                          // TODO: Navigasi ke halaman Add/Edit Product dalam mode 'Edit'
-                          print('Edit product with ID: ${product.id}');
+                          // Navigasi ke halaman Add/Edit dalam mode 'Edit' dengan membawa productId
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AddEditProductScreen(productId: product.id)),
+                          ).then((result) {
+                            // Refresh daftar produk jika ada perubahan
+                            if (result == true) {
+                              setState(() { _productsFuture = _fetchProducts(); });
+                            }
+                          });
                         },
                       ),
+                      // --- TOMBOL HAPUS (Sudah Benar) ---
                       IconButton(
                         icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
                         onPressed: () {
-                          // Tampilkan dialog konfirmasi sebelum menghapus
                           showDialog(
                             context: context,
                             builder: (BuildContext dialogContext) {
