@@ -19,10 +19,10 @@ Future<void> main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlvc3p3Y3V1bG9memFyenRwZHFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1OTc2NDksImV4cCI6MjA2NjE3MzY0OX0.hfADScj2WDH9gU79e7TriH5eV3cRmuglajpZvrHMqJ4',
   );
 
-  runApp(SemerbakHarumApp());
+  runApp(ScentifyApp());
 }
 
-class SemerbakHarumApp extends StatelessWidget {
+class ScentifyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

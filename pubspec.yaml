@@ -40,7 +40,9 @@ dependencies:
   path_provider: ^2.1.5
   image_picker: ^1.1.2
   shimmer: ^3.0.0
-  file_picker: ^8.0.0+1 
+  file_picker: ^8.0.0+1
+  fl_chart: ^0.68.0       # Untuk membuat grafik
+  data_table_2: ^2.5.10   # Untuk membuat tabel data canggih 
 
 dev_dependencies:
   flutter_test:

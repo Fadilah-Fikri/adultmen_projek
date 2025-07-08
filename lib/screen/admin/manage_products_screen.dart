@@ -1,6 +1,7 @@
+import 'package:adultmen_uas/screen/admin/add_edit_product_screen.dart';
+import 'package:adultmen_uas/screen/home_screen.dart';
+import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
-import 'package:adultmen_uas/screen/admin/add_edit_product_screen.dart'; // IMPORT HALAMAN FORM
-import 'package:adultmen_uas/screen/home_screen.dart'; //Kita pakai ulang model 'Fragrance'
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ManageProductsScreen extends StatefulWidget {
@@ -11,12 +12,75 @@ class ManageProductsScreen extends StatefulWidget {
 }
 
 class _ManageProductsScreenState extends State<ManageProductsScreen> {
-  late Future<List<Fragrance>> _productsFuture;
-
   @override
-  void initState() {
-    super.initState();
-    _productsFuture = _fetchProducts();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Kelola Produk'),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AddEditProductScreen()),
+              ).then((result) {
+                if (result == true) {
+                  // Cukup panggil setState kosong untuk memicu build ulang FutureBuilder
+                  setState(() {});
+                }
+              });
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Tambah Produk'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
+      body: FutureBuilder<List<Fragrance>>(
+        future: _fetchProducts(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          final products = snapshot.data ?? [];
+
+          if (products.isEmpty) {
+            return const Center(
+                child: Text('Belum ada produk. Silakan tambahkan.'));
+          }
+
+          return PaginatedDataTable2(
+            columns: const [
+              DataColumn(label: Text('Gambar')),
+              DataColumn(label: Text('Nama Produk')),
+              DataColumn(label: Text('Harga'), numeric: true),
+              DataColumn(label: Text('Stok'), numeric: true),
+              DataColumn(label: Text('Aksi')),
+            ],
+            source: _ProductDataSource(products, context, () {
+              setState(() {}); // Panggil setState untuk refresh
+            }),
+            rowsPerPage: 10,
+            columnSpacing: 20,
+            horizontalMargin: 20,
+            minWidth: 800,
+          );
+        },
+      ),
+    );
   }
 
   Future<List<Fragrance>> _fetchProducts() async {
@@ -25,7 +89,6 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
           .from('fragrances')
           .select()
           .order('created_at', ascending: false);
-
       return List<Map<String, dynamic>>.from(data)
           .map((item) => Fragrance.fromJson(item))
           .toList();
@@ -39,6 +102,15 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
       return [];
     }
   }
+}
+
+// Data Source untuk tabel data
+class _ProductDataSource extends DataTableSource {
+  final List<Fragrance> _products;
+  final BuildContext _context;
+  final VoidCallback _onDataChanged;
+
+  _ProductDataSource(this._products, this._context, this._onDataChanged);
 
   Future<void> _deleteProduct(String productId) async {
     try {
@@ -46,131 +118,89 @@ class _ManageProductsScreenState extends State<ManageProductsScreen> {
           .from('fragrances')
           .delete()
           .eq('id', productId);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Product deleted successfully'),
-          backgroundColor: Colors.green,
-        ));
-        setState(() {
-          _productsFuture = _fetchProducts();
-        });
-      }
+
+      ScaffoldMessenger.of(_context).showSnackBar(const SnackBar(
+        content: Text('Produk berhasil dihapus'),
+        backgroundColor: Colors.green,
+      ));
+      _onDataChanged(); // Panggil callback untuk refresh UI
     } catch (e) {
-       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error deleting product: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ));
-      }
+      ScaffoldMessenger.of(_context).showSnackBar(SnackBar(
+        content: Text('Gagal menghapus produk: $e'),
+        backgroundColor: Theme.of(_context).colorScheme.error,
+      ));
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kelola Produk'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigasi ke halaman Add/Edit dalam mode 'Tambah' (tanpa productId)
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddEditProductScreen()),
-          ).then((result) {
-            // Jika halaman form ditutup dan mengembalikan nilai 'true' (artinya ada perubahan),
-            // maka kita refresh daftar produk.
-            if (result == true) {
-              setState(() { _productsFuture = _fetchProducts(); });
-            }
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: FutureBuilder<List<Fragrance>>(
-        future: _productsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Belum ada produk. Silakan tambahkan.'));
-          }
-
-          final products = snapshot.data!;
-
-          return ListView.builder(
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage(product.imageUrl),
-                    onBackgroundImageError: (_, __) {},
-                  ),
-                  title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Rp ${product.price.toStringAsFixed(0)}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // --- TOMBOL EDIT DIPERBARUI ---
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue.shade700),
-                        onPressed: () {
-                          // Navigasi ke halaman Add/Edit dalam mode 'Edit' dengan membawa productId
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AddEditProductScreen(productId: product.id)),
-                          ).then((result) {
-                            // Refresh daftar produk jika ada perubahan
-                            if (result == true) {
-                              setState(() { _productsFuture = _fetchProducts(); });
-                            }
-                          });
-                        },
-                      ),
-                      // --- TOMBOL HAPUS (Sudah Benar) ---
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext dialogContext) {
-                              return AlertDialog(
-                                title: const Text('Konfirmasi Hapus'),
-                                content: Text('Anda yakin ingin menghapus produk "${product.name}"?'),
-                                actions: [
-                                  TextButton(
-                                    child: const Text('Batal'),
-                                    onPressed: () => Navigator.of(dialogContext).pop(),
-                                  ),
-                                  TextButton(
-                                    child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-                                    onPressed: () {
-                                      Navigator.of(dialogContext).pop();
-                                      _deleteProduct(product.id);
-                                    },
-                                  ),
-                                ],
-                              );
+  DataRow? getRow(int index) {
+    if (index >= _products.length) return null;
+    final product = _products[index];
+    return DataRow2.byIndex(
+      index: index,
+      cells: [
+        DataCell(Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child:
+              CircleAvatar(backgroundImage: NetworkImage(product.imageUrl)),
+        )),
+        DataCell(Text(product.name)),
+        DataCell(Text('Rp ${product.price.toStringAsFixed(0)}')),
+        DataCell(Text('N/A')), // Placeholder untuk stok
+        DataCell(Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+                icon: const Icon(Icons.edit_outlined, color: Colors.blue),
+                onPressed: () {
+                  Navigator.push(
+                      _context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              AddEditProductScreen(productId: product.id))).then((result) {
+                    if (result == true) _onDataChanged();
+                  });
+                }),
+            IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: () {
+                  showDialog(
+                    context: _context,
+                    builder: (BuildContext dialogContext) {
+                      return AlertDialog(
+                        title: const Text('Konfirmasi Hapus'),
+                        content: Text(
+                            'Anda yakin ingin menghapus produk "${product.name}"?'),
+                        actions: [
+                          TextButton(
+                            child: const Text('Batal'),
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                          ),
+                          TextButton(
+                            child: const Text('Hapus',
+                                style: TextStyle(color: Colors.red)),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                              _deleteProduct(product.id);
                             },
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }),
+          ],
+        )),
+      ],
     );
   }
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get rowCount => _products.length;
+
+  @override
+  int get selectedRowCount => 0;
 }

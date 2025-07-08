@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+// Kita akan buat file-file ini di langkah selanjutnya
+import 'dashboard_overview_page.dart';
+import 'manage_products_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -9,166 +12,80 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  int _productCount = 0;
-  int _userCount = 0;
-  bool _isLoading = true;
+  int _selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchDashboardStats();
-  }
-
- // Ganti keseluruhan method _fetchDashboardStats dengan kode ini
-
-Future<void> _fetchDashboardStats() async {
-    // Pastikan status loading di-set di awal jika belum
-    if (!_isLoading) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
-
-    try {
-      // --- CARA BARU UNTUK MENGHITUNG ---
-      // Menghitung jumlah produk
-      final productCount = await Supabase.instance.client
-          .from('fragrances')
-          .count(CountOption.exact);
-      
-      // Menghitung jumlah pengguna
-      final userCount = await Supabase.instance.client
-          .from('profiles')
-          .count(CountOption.exact);
-
-      if (mounted) {
-        setState(() {
-          // Hasilnya adalah integer langsung, tidak perlu .count lagi
-          _productCount = productCount;
-          _userCount = userCount;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error fetching stats: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ));
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-}
+  // Daftar halaman yang akan ditampilkan berdasarkan menu navigasi
+  static final List<Widget> _adminPages = <Widget>[
+    const DashboardOverviewPage(), // Halaman utama dashboard (Langkah 3)
+    const ManageProductsScreen(),    // Halaman kelola produk (Langkah 4)
+    const Center(child: Text('Kelola Pengguna')), // Placeholder
+    const Center(child: Text('Pengaturan')),     // Placeholder
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/');
-              }
+      body: Row(
+        children: [
+          // --- MENU NAVIGASI SAMPING ---
+          NavigationRail(
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (int index) {
+              setState(() {
+                _selectedIndex = index;
+              });
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh Data',
-            onPressed: _fetchDashboardStats,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchDashboardStats,
-              child: GridView.count(
-                padding: const EdgeInsets.all(16.0),
-                crossAxisCount: 2, // 2 kartu per baris
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _buildStatCard(
-                    context,
-                    title: 'Total Produk',
-                    value: _productCount.toString(),
-                    icon: Icons.shopping_bag_outlined,
-                    color: Colors.blue,
+            labelType: NavigationRailLabelType.all,
+            leading: const CircleAvatar(
+              child: Icon(Icons.admin_panel_settings),
+            ),
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: IconButton(
+                    icon: const Icon(Icons.logout),
+                    tooltip: 'Logout',
+                    onPressed: () async {
+                      await Supabase.instance.client.auth.signOut();
+                      if (context.mounted) {
+                        Navigator.pushReplacementNamed(context, '/');
+                      }
+                    },
                   ),
-                  _buildStatCard(
-                    context,
-                    title: 'Total Pengguna',
-                    value: _userCount.toString(),
-                    icon: Icons.group_outlined,
-                    color: Colors.green,
-                  ),
-                   _buildStatCard(
-                    context,
-                    title: 'Total Penjualan',
-                    value: 'Rp 0', // Placeholder
-                    icon: Icons.monetization_on_outlined,
-                    color: Colors.orange,
-                    isPlaceholder: true,
-                    placeholderText: 'Fitur pesanan belum dibuat'
-                  ),
-                  _buildNavCard(
-                    context,
-                    title: 'Kelola Produk',
-                    icon: Icons.settings_outlined,
-                    onTap: () {
-                       Navigator.pushNamed(context, '/manage_products');
-                    }
-                  ),
-                ],
+                ),
               ),
             ),
-    );
-  }
-
-  Widget _buildStatCard(BuildContext context, {required String title, required String value, required IconData icon, required Color color, bool isPlaceholder = false, String? placeholderText}) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon, size: 40, color: color),
-            const Spacer(),
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            Text(value, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: color)),
-            if (isPlaceholder)
-              Text(placeholderText!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey))
-          ],
-        ),
-      ),
-    );
-  }
-
-    Widget _buildNavCard(BuildContext context, {required String title, required IconData icon, required VoidCallback onTap}) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 50, color: Theme.of(context).primaryColor),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
-          ],
-        ),
+            destinations: const <NavigationRailDestination>[
+              NavigationRailDestination(
+                icon: Icon(Icons.dashboard_outlined),
+                selectedIcon: Icon(Icons.dashboard),
+                label: Text('Overview'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.shopping_bag_outlined),
+                selectedIcon: Icon(Icons.shopping_bag),
+                label: Text('Produk'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.group_outlined),
+                selectedIcon: Icon(Icons.group),
+                label: Text('Pengguna'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: Text('Settings'),
+              ),
+            ],
+          ),
+          const VerticalDivider(thickness: 1, width: 1),
+          // --- KONTEN UTAMA HALAMAN ---
+          Expanded(
+            child: _adminPages[_selectedIndex],
+          ),
+        ],
       ),
     );
   }
