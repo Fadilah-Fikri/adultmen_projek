@@ -2,6 +2,9 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'addresses_page.dart';
+import 'favorites_page.dart';
+import 'package:adultmen_uas/services/favorite_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -32,10 +35,6 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // --- SEMUA FUNGSI LOGIC (UNCHANGED) ---
-  // _loadInitialData, _pickAvatar, _uploadAvatar, _updateProfile
-  // tidak diubah sama sekali dan tetap sama seperti sebelumnya.
-  // ... (Kode fungsi logic Anda diletakkan di sini)
   Future<void> _loadInitialData() async {
     setState(() => _isLoading = true);
     try {
@@ -205,7 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         _buildProfileFormCard(),
                         const SizedBox(height: 24),
-                        _buildMarketplaceMenu(), // <-- MENU BARU DITAMBAHKAN DI SINI
+                        _buildMarketplaceMenu(),
                         const SizedBox(height: 24),
                         _buildLogoutButton(),
                       ],
@@ -361,13 +360,23 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildMenuItem(
             icon: Icons.favorite_border,
             title: 'Favorites',
-            onTap: () => _showComingSoon('Halaman Favorites'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FavoritesPage()),
+              );
+            },
           ),
           const Divider(height: 1),
           _buildMenuItem(
             icon: Icons.location_on_outlined,
             title: 'Alamat Pengiriman',
-            onTap: () => _showComingSoon('Halaman Alamat'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddressPage()),
+              );
+            },
           ),
           const Divider(height: 1),
           _buildMenuItem(
@@ -375,7 +384,7 @@ class _ProfilePageState extends State<ProfilePage> {
             title: 'Pengaturan Akun',
             onTap: () => _showComingSoon('Halaman Pengaturan Akun'),
           ),
-           const Divider(height: 1),
+          const Divider(height: 1),
           _buildMenuItem(
             icon: Icons.help_outline,
             title: 'Pusat Bantuan',
@@ -414,6 +423,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       onPressed: () async {
         await Supabase.instance.client.auth.signOut();
+        FavoriteService.clearFavorites(); 
         if (mounted) {
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         }

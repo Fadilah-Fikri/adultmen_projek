@@ -1,27 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:adultmen_uas/services/favorite_service.dart';
+import 'package:adultmen_uas/models/fragrance.dart';
+import 'package:adultmen_uas/screen/product_detail_page.dart';
 
-class FragranceCard extends StatelessWidget {
+class FragranceCard extends StatefulWidget {
   final String id;
   final String name;
   final String desc;
   final String imageUrl;
 
   const FragranceCard({
-    Key? key,
+    super.key,
     required this.id,
     required this.name,
     required this.desc,
     required this.imageUrl,
-  }) : super(key: key);
+  });
+
+  @override
+  State<FragranceCard> createState() => _FragranceCardState();
+}
+
+class _FragranceCardState extends State<FragranceCard> {
+  late bool _isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = FavoriteService.isFavorite(widget.id);
+    FavoriteService.favoritesNotifier.addListener(_onFavoritesChanged);
+  }
+
+  @override
+  void dispose() {
+    FavoriteService.favoritesNotifier.removeListener(_onFavoritesChanged);
+    super.dispose();
+  }
+
+  void _onFavoritesChanged() {
+    final newIsFavorite = FavoriteService.isFavorite(widget.id);
+    if (mounted && _isFavorite != newIsFavorite) {
+      setState(() {
+        _isFavorite = newIsFavorite;
+      });
+    }
+  }
+  
+  void _handleToggleFavorite() {
+    final fragrance = Fragrance(
+      id: widget.id,
+      name: widget.name,
+      desc: widget.desc,
+      imageUrl: widget.imageUrl,
+      price: 0, 
+    );
+    FavoriteService.toggleFavorite(fragrance);
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Anda bisa kembangkan navigasi ke halaman detail di sini
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen(fragranceId: id)));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Navigasi ke detail untuk produk dengan ID: $id')),
+        // Navigasi ke halaman detail produk
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailPage(fragranceId: widget.id),
+          ),
         );
       },
       child: Card(
@@ -33,28 +79,20 @@ class FragranceCard extends StatelessWidget {
           alignment: Alignment.bottomCenter,
           children: [
             Hero(
-              tag: 'fragrance-image-$id',
+              tag: 'fragrance-image-${widget.id}',
               child: Image.network(
-                imageUrl,
+                widget.imageUrl,
                 height: double.infinity,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(
-                      Icons.broken_image,
-                      color: Colors.grey,
-                      size: 40,
-                    ),
-                  );
-                },
+                errorBuilder: (context, error, stackTrace) => 
+                    const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 40)),
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Center(
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
+                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
                           : null,
                     ),
                   );
@@ -63,9 +101,9 @@ class FragranceCard extends StatelessWidget {
             ),
             Container(
               height: 100,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                  colors: [Colors.black, Colors.transparent],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                 ),
@@ -79,24 +117,36 @@ class FragranceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+                    widget.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    desc,
-                    style: TextStyle(
-                        fontSize: 12, color: Colors.white.withOpacity(0.9)),
+                    widget.desc,
+                    style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.9)),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: IconButton(
+                icon: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: _isFavorite ? Colors.red.shade400 : Colors.white,
+                  size: 28,
+                ),
+                onPressed: _handleToggleFavorite,
+                style: IconButton.styleFrom(
+                  iconSize: 28,
+                  shadowColor: Colors.black54,
+                  elevation: 4
+                ),
               ),
             ),
           ],

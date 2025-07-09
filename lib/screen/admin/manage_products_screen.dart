@@ -3,6 +3,7 @@ import 'package:adultmen_uas/screen/home_screen.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:adultmen_uas/models/fragrance.dart';
 
 class ManageProductsScreen extends StatefulWidget {
   const ManageProductsScreen({Key? key}) : super(key: key);

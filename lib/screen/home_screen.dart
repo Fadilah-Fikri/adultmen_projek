@@ -3,45 +3,21 @@ import 'package:adultmen_uas/widget/fragrance_card.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'profile_page.dart';
-
-class Fragrance {
-  final String id;
-  final String name;
-  final String desc;
-  final String imageUrl;
-  final double price;
-
-  Fragrance({
-    required this.id,
-    required this.name,
-    required this.desc,
-    required this.imageUrl,
-    required this.price
-  });
-
-  factory Fragrance.fromJson(Map<String, dynamic> json) {
-    return Fragrance(
-      id: json['id'] ?? '',
-      name: json['name'] ?? 'No Name',
-      desc: json['description'] ?? 'No Description',
-      imageUrl: json['image_url'] ?? '',
-      price: (json['price'] as num? ?? 0).toDouble(),
-    );
-  }
-}
+import 'favorites_page.dart';
+import 'package:adultmen_uas/models/fragrance.dart';
+import 'package:adultmen_uas/services/favorite_service.dart'; // Import service favorit
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   
-  // State untuk "Featured Fragrances" (tetap menggunakan FutureBuilder karena lebih sederhana di dalam SliverToBoxAdapter)
-  late final Future<List<Fragrance>> _featuredFragrancesFuture;
-
-  // State untuk "New Arrivals" yang akan kita kelola manual
+  late Future<List<Fragrance>> _featuredFragrancesFuture;
   List<Fragrance> _newArrivalsList = [];
   bool _newArrivalsLoading = true;
   String? _newArrivalsError;
@@ -49,9 +25,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // MODIFIKASI: Panggil method baru yang memuat semua data awal
+    _loadInitialData();
+  }
+
+  // --- METHOD BARU UNTUK MEMUAT SEMUA DATA AWAL ---
+  Future<void> _loadInitialData() async {
+    // 1. Memuat produk yang sudah ada
     _featuredFragrancesFuture = _fetchFragrances(isFeatured: true);
-    // Panggil method untuk mengambil data New Arrivals
     _fetchNewArrivals();
+
+    // 2. Memuat favorit pengguna dari database jika sudah login
+    if (Supabase.instance.client.auth.currentUser != null) {
+      await FavoriteService.loadFavoritesForUser();
+    }
   }
 
   Future<List<Fragrance>> _fetchFragrances({bool isFeatured = false, int? limit}) async {
@@ -65,12 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
           .toList();
     } catch (e) {
       print('Error fetching fragrances: $e');
-      // Melempar error agar bisa ditangkap oleh FutureBuilder
       throw 'Failed to load fragrances: $e';
     }
   }
 
-  // Method khusus untuk New Arrivals yang menggunakan setState
   Future<void> _fetchNewArrivals() async {
     try {
       final arrivals = await _fetchFragrances(limit: 4);
@@ -96,18 +81,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-   @override
+    @override
   Widget build(BuildContext context) {
-    // --- UBAH ISI DARI LIST INI ---
     final List<Widget> _widgetOptions = <Widget>[
       _buildHomeContent(),
-      Center(
+      const Center(
           child: Text('Shop Screen',
-              style: Theme.of(context).textTheme.headlineSmall)),
-      Center(
-          child: Text('Favorites Screen',
-              style: Theme.of(context).textTheme.headlineSmall)),
-      // GANTI WIDGET INI DARI 'Center' MENJADI 'ProfilePage'
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
+      const FavoritesPage(), 
       const ProfilePage(), 
     ];
 
@@ -145,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         _buildSectionTitle(context, "Featured Fragrances"),
         SliverToBoxAdapter(
-          child: Container(
+          child: SizedBox(
             height: 220,
             child: FutureBuilder<List<Fragrance>>(
               future: _featuredFragrancesFuture,
@@ -154,7 +135,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   return _buildShimmerLoading(true);
                 }
                 if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text(snapshot.error?.toString() ?? 'No featured items.'));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(snapshot.error?.toString() ?? 'No featured items available.'),
+                    ),
+                  );
                 }
                 final fragrances = snapshot.data!;
                 return ListView.builder(
@@ -179,9 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         _buildSectionTitle(context, "New Arrivals"),
-        
-        // --- BAGIAN YANG DIPERBAIKI ---
-        // Kita sekarang menggunakan kondisi if-else untuk membangun sliver yang tepat
         if (_newArrivalsLoading)
           _buildShimmerSliverGrid()
         else if (_newArrivalsError != null)
@@ -221,8 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-        // --- AKHIR BAGIAN YANG DIPERBAIKI ---
-
         _buildSectionTitle(context, "Promotions"),
         SliverToBoxAdapter(
           child: _buildPromotionCard(context),
@@ -232,7 +213,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Method shimmer untuk ListView (Box)
   Widget _buildShimmerLoading(bool isHorizontal) {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
@@ -251,7 +231,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Method shimmer untuk SliverGrid (Sliver)
   Widget _buildShimmerSliverGrid() {
     return SliverPadding(
       padding: const EdgeInsets.all(16),
