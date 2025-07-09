@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:adultmen_uas/widget/fragrance_card.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'profile_page.dart';
 
 class Fragrance {
   final String id;
@@ -95,30 +96,19 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
+    // --- UBAH ISI DARI LIST INI ---
     final List<Widget> _widgetOptions = <Widget>[
       _buildHomeContent(),
-      Center(child: Text('Shop Screen', style: Theme.of(context).textTheme.headlineSmall)),
-      Center(child: Text('Favorites Screen', style: Theme.of(context).textTheme.headlineSmall)),
       Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Profile Screen', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await Supabase.instance.client.auth.signOut();
-                if (mounted) {
-                  Navigator.pushReplacementNamed(context, '/');
-                }
-              },
-              child: const Text('Logout'),
-            )
-          ],
-        ),
-      ),
+          child: Text('Shop Screen',
+              style: Theme.of(context).textTheme.headlineSmall)),
+      Center(
+          child: Text('Favorites Screen',
+              style: Theme.of(context).textTheme.headlineSmall)),
+      // GANTI WIDGET INI DARI 'Center' MENJADI 'ProfilePage'
+      const ProfilePage(), 
     ];
 
     return Scaffold(
@@ -150,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
           pinned: true,
           snap: false,
           centerTitle: true,
-          title: Text('Semerbak Harum'),
+          title: Text('Scentify'),
           actions: [IconButton(onPressed: null, icon: Icon(Icons.search))],
         ),
         _buildSectionTitle(context, "Featured Fragrances"),

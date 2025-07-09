@@ -26,7 +26,7 @@ class ScentifyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Semerbak Harum',
+      title: 'Scentify',
       debugShowCheckedModeBanner: false,
       theme: _buildThemeData(),
       initialRoute: '/', // Mulai dari splash screen untuk cek auth

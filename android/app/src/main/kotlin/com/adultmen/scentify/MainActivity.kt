@@ -1,4 +1,4 @@
-package com.example.adultmen_uas
+package com.adultmen.scentify
 
 import io.flutter.embedding.android.FlutterActivity
 
