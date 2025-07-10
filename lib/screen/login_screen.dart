@@ -22,38 +22,66 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    setState(() => _isLoading = true);
+// Di dalam class _LoginScreenState
 
-    try {
-      await Supabase.instance.client.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      if (mounted) {
+Future<void> _signIn() async {
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
+  setState(() => _isLoading = true);
+
+  try {
+    // 1. Lakukan proses sign in seperti biasa
+    final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    // Pastikan login berhasil dan user tidak null
+    if (authResponse.user == null) {
+      throw const AuthException('Login gagal, silakan coba lagi.');
+    }
+
+    // 2. Ambil ID user yang berhasil login
+    final userId = authResponse.user!.id;
+
+    // 3. Ambil data role dari tabel 'profiles'
+    final response = await Supabase.instance.client
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single(); 
+
+    if (mounted) {
+      final role = response['role'];
+      
+      // 4. Cek role dan arahkan ke halaman yang sesuai
+      if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin_dashboard');
+      } else {
         Navigator.pushReplacementNamed(context, '/home');
       }
-    } on AuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.message),
-            backgroundColor: Theme.of(context).colorScheme.error));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text('Terjadi kesalahan yang tidak terduga.'),
-            backgroundColor: Theme.of(context).colorScheme.error));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    }
+    
+  } on AuthException catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message),
+          backgroundColor: Theme.of(context).colorScheme.error));
+    }
+  } catch (e) {
+    if (mounted) {
+      // Menampilkan pesan error yang lebih spesifik jika role tidak ditemukan
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Gagal memeriksa peran pengguna. Pastikan profil ada.'),
+          backgroundColor: Theme.of(context).colorScheme.error));
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {

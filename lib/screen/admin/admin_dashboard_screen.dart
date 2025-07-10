@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// Kita akan buat file-file ini di langkah selanjutnya
+// Sesuaikan path import jika diperlukan
 import 'dashboard_overview_page.dart';
 import 'manage_products_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,12 +14,11 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
 
-  // Daftar halaman yang akan ditampilkan berdasarkan menu navigasi
   static final List<Widget> _adminPages = <Widget>[
-    const DashboardOverviewPage(), // Halaman utama dashboard (Langkah 3)
-    const ManageProductsScreen(),    // Halaman kelola produk (Langkah 4)
-    const Center(child: Text('Kelola Pengguna')), // Placeholder
-    const Center(child: Text('Pengaturan')),     // Placeholder
+    const DashboardOverviewPage(),
+    const ManageProductsScreen(),
+    const Center(child: Text('Kelola Pengguna')),
+    const Center(child: Text('Pengaturan')),
   ];
 
   @override
@@ -27,7 +26,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       body: Row(
         children: [
-          // --- MENU NAVIGASI SAMPING ---
           NavigationRail(
             selectedIndex: _selectedIndex,
             onDestinationSelected: (int index) {
@@ -39,24 +37,44 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             leading: const CircleAvatar(
               child: Icon(Icons.admin_panel_settings),
             ),
+            
+            // --- PERUBAHAN DILAKUKAN DI BAGIAN 'trailing' INI ---
             trailing: Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
-                  child: IconButton(
-                    icon: const Icon(Icons.logout),
-                    tooltip: 'Logout',
-                    onPressed: () async {
-                      await Supabase.instance.client.auth.signOut();
-                      if (context.mounted) {
-                        Navigator.pushReplacementNamed(context, '/');
-                      }
-                    },
+                  // Menggunakan Column untuk menumpuk tombol
+                  child: Column( 
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Tombol baru untuk melihat toko
+                      IconButton(
+                        icon: const Icon(Icons.storefront_outlined),
+                        tooltip: 'Lihat Tampilan Toko',
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/home');
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      // Tombol logout yang sudah ada
+                      IconButton(
+                        icon: const Icon(Icons.logout),
+                        tooltip: 'Logout',
+                        onPressed: () async {
+                          await Supabase.instance.client.auth.signOut();
+                          if (context.mounted) {
+                            Navigator.pushReplacementNamed(context, '/');
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+            // ---------------------------------------------------
+
             destinations: const <NavigationRailDestination>[
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard_outlined),
@@ -81,7 +99,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
           const VerticalDivider(thickness: 1, width: 1),
-          // --- KONTEN UTAMA HALAMAN ---
           Expanded(
             child: _adminPages[_selectedIndex],
           ),

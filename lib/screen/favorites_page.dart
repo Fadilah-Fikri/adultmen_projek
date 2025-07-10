@@ -67,6 +67,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 name: f.name,
                 desc: f.desc,
                 imageUrl: f.imageUrl,
+                price: f.price,
                 category: f.category, // <-- INI ADALAH PERUBAHAN YANG DIMAKSUD
               );
             },

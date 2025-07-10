@@ -45,6 +45,8 @@ dependencies:
   data_table_2: ^2.5.10   # Untuk membuat tabel data canggih 
   provider: ^6.1.5
   flutter_animate: ^4.5.2
+  shared_preferences: ^2.5.3
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

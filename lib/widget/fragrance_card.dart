@@ -8,7 +8,8 @@ class FragranceCard extends StatefulWidget {
   final String name;
   final String desc;
   final String imageUrl;
-  final String category; // <-- 1. TAMBAHKAN PROPERTI INI
+  final String category;
+  final double price; // <-- DITAMBAHKAN
 
   const FragranceCard({
     super.key,
@@ -16,7 +17,8 @@ class FragranceCard extends StatefulWidget {
     required this.name,
     required this.desc,
     required this.imageUrl,
-    required this.category, // <-- 2. TAMBAHKAN DI CONSTRUCTOR
+    required this.category,
+    required this.price, // <-- DITAMBAHKAN
   });
 
   @override
@@ -54,25 +56,34 @@ class _FragranceCardState extends State<FragranceCard> {
       name: widget.name,
       desc: widget.desc,
       imageUrl: widget.imageUrl,
-      price: 0,
-      category: widget.category, // <-- 3. TAMBAHKAN NILAI CATEGORY DI SINI
+      price: widget.price, // <-- DIPERBAIKI
+      category: widget.category,
     );
     FavoriteService.toggleFavorite(fragrance);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Sisa kode build method tidak perlu diubah
     return GestureDetector(
       onTap: () {
+        // --- NAVIGASI DIPERBAIKI DI SINI ---
+        final fragrance = Fragrance(
+          id: widget.id,
+          name: widget.name,
+          desc: widget.desc,
+          imageUrl: widget.imageUrl,
+          price: widget.price,
+          category: widget.category,
+        );
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailPage(fragranceId: widget.id),
+            builder: (context) => ProductDetailPage(fragrance: fragrance),
           ),
         );
       },
       child: Card(
+        // ... Sisa kode build method tidak ada perubahan ...
         elevation: 4,
         shadowColor: Colors.black.withOpacity(0.2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),

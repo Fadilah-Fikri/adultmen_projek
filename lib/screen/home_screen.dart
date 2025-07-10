@@ -7,6 +7,7 @@ import 'shop_screen.dart';
 import 'favorites_page.dart';
 import 'package:adultmen_uas/models/fragrance.dart';
 import 'package:adultmen_uas/services/favorite_service.dart'; // Import service favorit
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,8 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // MODIFIKASI: Panggil method baru yang memuat semua data awal
     _loadInitialData();
+    _loadLastTabIndex(); // <-- 2. Panggil fungsi untuk memuat indeks terakhir
   }
 
   // --- METHOD BARU UNTUK MEMUAT SEMUA DATA AWAL ---
@@ -39,6 +40,18 @@ class _HomeScreenState extends State<HomeScreen> {
     // 2. Memuat favorit pengguna dari database jika sudah login
     if (Supabase.instance.client.auth.currentUser != null) {
       await FavoriteService.loadFavoritesForUser();
+    }
+  }
+
+   // --- FUNGSI BARU UNTUK MEMUAT INDEKS DARI PENYIMPANAN LOKAL ---
+  Future<void> _loadLastTabIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Baca 'last_tab_index'. Jika tidak ada, gunakan 0 (Home) sebagai default.
+    final lastIndex = prefs.getInt('last_tab_index') ?? 0;
+    if (mounted) {
+      setState(() {
+        _selectedIndex = lastIndex;
+      });
     }
   }
 
@@ -76,7 +89,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onItemTapped(int index) {
+  // --- MODIFIKASI FUNGSI INI UNTUK MENYIMPAN INDEKS ---
+  void _onItemTapped(int index) async { // <-- Tambahkan async
+    final prefs = await SharedPreferences.getInstance();
+    // 3. Simpan indeks yang baru dipilih ke penyimpanan lokal
+    await prefs.setInt('last_tab_index', index); 
+    
     setState(() {
       _selectedIndex = index;
     });
@@ -156,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           name: f.name,
                           desc: f.desc,
                           imageUrl: f.imageUrl,
+                          price: f.price,
                           category: f.category,),
                     );
                   },
@@ -199,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       name: f.name,
                       desc: f.desc,
                       imageUrl: f.imageUrl,
+                      price: f.price,
                       category: f.category,);
                 },
                 childCount: _newArrivalsList.length,

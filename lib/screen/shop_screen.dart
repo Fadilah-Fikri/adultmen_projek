@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:adultmen_uas/models/fragrance.dart';
 import 'package:adultmen_uas/widget/fragrance_card.dart';
-import 'product_detail_screen.dart';
+import 'product_detail_page.dart';
 
 // --- 1. TAMBAHKAN IMPORT UNTUK PROVIDER & CART ---
 import 'package:provider/provider.dart';
@@ -163,7 +163,7 @@ class _ShopScreenState extends State<ShopScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ProductDetailScreen(fragrance: fragrance),
+                      builder: (context) => ProductDetailPage(fragrance: fragrance),
                     ),
                   );
                 },
@@ -172,7 +172,9 @@ class _ShopScreenState extends State<ShopScreen> {
                   name: fragrance.name,
                   desc: fragrance.desc,
                   imageUrl: fragrance.imageUrl,
+                  price: fragrance.price,
                   category: fragrance.category,
+
                 ),
               ),
             ),
