@@ -48,7 +48,7 @@ class _AddressPageState extends State<AddressPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alamat Saya'),
-        backgroundColor: Colors.black,
+        backgroundColor: const Color.fromARGB(255, 223, 228, 161),
         elevation: 1,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(

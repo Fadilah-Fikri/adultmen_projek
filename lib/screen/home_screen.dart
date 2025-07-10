@@ -3,6 +3,7 @@ import 'package:adultmen_uas/widget/fragrance_card.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'profile_page.dart';
+import 'shop_screen.dart';
 import 'favorites_page.dart';
 import 'package:adultmen_uas/models/fragrance.dart';
 import 'package:adultmen_uas/services/favorite_service.dart'; // Import service favorit
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchNewArrivals() async {
     try {
-      final arrivals = await _fetchFragrances(limit: 4);
+      final arrivals = await _fetchFragrances(limit: 5);
       if (mounted) {
         setState(() {
           _newArrivalsList = arrivals;
@@ -84,13 +85,11 @@ class _HomeScreenState extends State<HomeScreen> {
     @override
   Widget build(BuildContext context) {
     final List<Widget> _widgetOptions = <Widget>[
-      _buildHomeContent(),
-      const Center(
-          child: Text('Shop Screen',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
-      const FavoritesPage(), 
-      const ProfilePage(), 
-    ];
+  _buildHomeContent(),
+  const ShopScreen(), // GANTI DENGAN INI
+  const FavoritesPage(), 
+  const ProfilePage(), 
+];
 
     return Scaffold(
       body: IndexedStack(
@@ -122,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
           snap: false,
           centerTitle: true,
           title: Text('Scentify'),
-          actions: [IconButton(onPressed: null, icon: Icon(Icons.search))],
+         // actions: [IconButton(onPressed: null, icon: Icon(Icons.search))],
         ),
         _buildSectionTitle(context, "Featured Fragrances"),
         SliverToBoxAdapter(
@@ -156,7 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           id: f.id,
                           name: f.name,
                           desc: f.desc,
-                          imageUrl: f.imageUrl),
+                          imageUrl: f.imageUrl,
+                          category: f.category,),
                     );
                   },
                 );
@@ -198,7 +198,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       id: f.id,
                       name: f.name,
                       desc: f.desc,
-                      imageUrl: f.imageUrl);
+                      imageUrl: f.imageUrl,
+                      category: f.category,);
                 },
                 childCount: _newArrivalsList.length,
               ),
@@ -296,14 +297,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 18)),
           const SizedBox(height: 8),
           Text(
-              "Get 20% Off All Fragrances!\nUse code FRAGRANCE20 at checkout.",
+              "Setiap aroma menceritakan sebuah kisah. Mulailah kisah Anda dengan koleksi terbaik dari kami  dan dapatkan diskon eksklusif 20% untuk semua produk parfum. Cukup gunakan kode FRAGRANCE20 saat checkout untuk merasakan kemewahan dengan harga yang lebih terjangkau."
+              ,
               style: TextStyle(color: Colors.white.withOpacity(0.9))),
           const SizedBox(height: 16),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Theme.of(context).primaryColor),
-            onPressed: () {},
+            onPressed: () {
+               _onItemTapped(1);
+            },
             child: const Text("Shop Now"),
           )
         ],

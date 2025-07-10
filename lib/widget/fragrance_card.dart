@@ -8,6 +8,7 @@ class FragranceCard extends StatefulWidget {
   final String name;
   final String desc;
   final String imageUrl;
+  final String category; // <-- 1. TAMBAHKAN PROPERTI INI
 
   const FragranceCard({
     super.key,
@@ -15,6 +16,7 @@ class FragranceCard extends StatefulWidget {
     required this.name,
     required this.desc,
     required this.imageUrl,
+    required this.category, // <-- 2. TAMBAHKAN DI CONSTRUCTOR
   });
 
   @override
@@ -52,17 +54,17 @@ class _FragranceCardState extends State<FragranceCard> {
       name: widget.name,
       desc: widget.desc,
       imageUrl: widget.imageUrl,
-      price: 0, 
+      price: 0,
+      category: widget.category, // <-- 3. TAMBAHKAN NILAI CATEGORY DI SINI
     );
     FavoriteService.toggleFavorite(fragrance);
   }
 
-
   @override
   Widget build(BuildContext context) {
+    // Sisa kode build method tidak perlu diubah
     return GestureDetector(
       onTap: () {
-        // Navigasi ke halaman detail produk
         Navigator.push(
           context,
           MaterialPageRoute(

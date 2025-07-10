@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart'; // <-- 1. Tambahkan import ini
+import 'package:adultmen_uas/providers/cart_provider.dart'; // <-- 2. Tambahkan import provider Anda
+
+// Import screen Anda
 import 'screen/home_screen.dart';
 import 'screen/login_screen.dart';
 import 'screen/register.dart';
@@ -9,17 +13,20 @@ import 'package:adultmen_uas/screen/admin/admin_dashboard_screen.dart';
 import 'package:adultmen_uas/screen/admin/manage_products_screen.dart';
 
 Future<void> main() async {
-  // Pastikan Flutter binding sudah siap
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Supabase di sini
   await Supabase.initialize(
-    // Ganti dengan URL dan Anon Key dari proyek Supabase Anda
     url: 'https://ioszwcuulofzarztpdqe.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlvc3p3Y3V1bG9memFyenRwZHFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1OTc2NDksImV4cCI6MjA2NjE3MzY0OX0.hfADScj2WDH9gU79e7TriH5eV3cRmuglajpZvrHMqJ4',
   );
 
-  runApp(ScentifyApp());
+  // --- 3. Bungkus ScentifyApp dengan provider ---
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CartProvider(),
+      child: ScentifyApp(),
+    ),
+  );
 }
 
 class ScentifyApp extends StatelessWidget {
@@ -29,7 +36,7 @@ class ScentifyApp extends StatelessWidget {
       title: 'Scentify',
       debugShowCheckedModeBanner: false,
       theme: _buildThemeData(),
-      initialRoute: '/', // Mulai dari splash screen untuk cek auth
+      initialRoute: '/', 
       routes: {
         '/': (context) => SplashScreen(),
         '/login': (context) => LoginScreen(),
@@ -41,8 +48,9 @@ class ScentifyApp extends StatelessWidget {
     );
   }
 
-  // ... (Sisa kode _buildThemeData() tidak perlu diubah, biarkan seperti semula)
+  // ... (Sisa kode _buildThemeData() tidak perlu diubah)
   ThemeData _buildThemeData() {
+    // ... isi method ini sama seperti sebelumnya
     final baseTheme = ThemeData.light();
     return baseTheme.copyWith(
       primaryColor: Color(0xFF8D7B68),

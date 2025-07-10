@@ -1,7 +1,4 @@
-// lib/screens/favorites_page.dart
-
 import 'package:flutter/material.dart';
-// Sesuaikan path ini dengan lokasi file Anda
 import 'package:adultmen_uas/services/favorite_service.dart';
 import 'package:adultmen_uas/widget/fragrance_card.dart';
 import 'package:adultmen_uas/models/fragrance.dart'; // Untuk mengakses model Fragrance
@@ -14,6 +11,14 @@ class FavoritesPage extends StatefulWidget {
 }
 
 class _FavoritesPageState extends State<FavoritesPage> {
+  late final ValueNotifier<List<Fragrance>> _favoritesNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _favoritesNotifier = FavoriteService.favoritesNotifier;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,11 +26,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
         title: const Text('Favorites'),
         centerTitle: true,
       ),
-      // Widget ini akan otomatis rebuild saat daftar favorit berubah
       body: ValueListenableBuilder<List<Fragrance>>(
-        valueListenable: FavoriteService.favoritesNotifier,
+        valueListenable: _favoritesNotifier,
         builder: (context, favoriteList, child) {
-          // Tampilkan pesan jika tidak ada item favorit
           if (favoriteList.isEmpty) {
             return const Center(
               child: Column(
@@ -38,27 +41,23 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     style: TextStyle(fontSize: 22, color: Colors.grey),
                   ),
                   SizedBox(height: 10),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 40.0),
-                    child: Text(
-                      'Tap the heart on any product to save it here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
+                  Text(
+                    'Tap the heart on any product to save it here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),
             );
           }
 
-          // Tampilkan daftar favorit dalam bentuk Grid
           return GridView.builder(
             padding: const EdgeInsets.all(16.0),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 250.0, // Lebar maksimal setiap item
+              maxCrossAxisExtent: 250.0,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
-              childAspectRatio: 0.7, // Rasio tinggi-lebar item
+              childAspectRatio: 0.7,
             ),
             itemCount: favoriteList.length,
             itemBuilder: (context, index) {
@@ -68,6 +67,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 name: f.name,
                 desc: f.desc,
                 imageUrl: f.imageUrl,
+                category: f.category, // <-- INI ADALAH PERUBAHAN YANG DIMAKSUD
               );
             },
           );
