@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart'; // <-- 1. Tambahkan import ini
-import 'package:adultmen_uas/providers/cart_provider.dart'; // <-- 2. Tambahkan import provider Anda
+import 'package:provider/provider.dart';
+import 'package:adultmen_uas/providers/cart_provider.dart';
+import 'package:intl/date_symbol_data_local.dart'; // <-- 1. TAMBAHKAN IMPORT INI
 
 // Import screen Anda
 import 'screen/home_screen.dart';
@@ -20,16 +21,23 @@ Future<void> main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlvc3p3Y3V1bG9memFyenRwZHFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA1OTc2NDksImV4cCI6MjA2NjE3MzY0OX0.hfADScj2WDH9gU79e7TriH5eV3cRmuglajpZvrHMqJ4',
   );
 
-  // --- 3. Bungkus ScentifyApp dengan provider ---
+  // <-- 2. TAMBAHKAN BARIS INI UNTUK INISIALISASI FORMAT TANGGAL -->
+  await initializeDateFormatting('id_ID', null);
+
+  // Bungkus dengan MultiProvider agar mudah menambah provider lain di masa depan
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => CartProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => CartProvider()),
+      ],
       child: ScentifyApp(),
     ),
   );
 }
 
 class ScentifyApp extends StatelessWidget {
+  const ScentifyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -38,47 +46,45 @@ class ScentifyApp extends StatelessWidget {
       theme: _buildThemeData(),
       initialRoute: '/', 
       routes: {
-        '/': (context) => SplashScreen(),
-        '/login': (context) => LoginScreen(),
+        '/': (context) => const SplashScreen(),
+        '/login': (context) =>  LoginScreen(),
         '/register': (context) => RegisterScreen(),
-        '/home': (context) => HomeScreen(),
-        '/admin_dashboard': (context) => AdminDashboardScreen(),
-        '/manage_products': (context) => ManageProductsScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/admin_dashboard': (context) => const AdminDashboardScreen(),
+        '/manage_products': (context) => const ManageProductsScreen(),
       },
     );
   }
 
-  // ... (Sisa kode _buildThemeData() tidak perlu diubah)
   ThemeData _buildThemeData() {
-    // ... isi method ini sama seperti sebelumnya
     final baseTheme = ThemeData.light();
     return baseTheme.copyWith(
-      primaryColor: Color(0xFF8D7B68),
-      scaffoldBackgroundColor: Color(0xFFFDF8F0),
+      primaryColor: const Color(0xFF8D7B68),
+      scaffoldBackgroundColor: const Color(0xFFFDF8F0),
       colorScheme: baseTheme.colorScheme.copyWith(
-        primary: Color(0xFF8D7B68),
-        secondary: Color(0xFFA4907C),
+        primary: const Color(0xFF8D7B68),
+        secondary: const Color(0xFFA4907C),
         surface: Colors.white,
         onPrimary: Colors.white,
       ),
       textTheme: GoogleFonts.montserratTextTheme(baseTheme.textTheme).copyWith(
-        headlineSmall: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3C3633)),
-        bodyLarge: TextStyle(color: Color(0xFF605752)),
-        bodyMedium: TextStyle(color: Color(0xFF605752)),
+        headlineSmall: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3C3633)),
+        bodyLarge: const TextStyle(color: Color(0xFF605752)),
+        bodyMedium: const TextStyle(color: Color(0xFF605752)),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Color(0xFF3C3633)),
+        iconTheme: const IconThemeData(color: Color(0xFF3C3633)),
         titleTextStyle: GoogleFonts.lora(
-          color: Color(0xFF3C3633),
+          color: const Color(0xFF3C3633),
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF8D7B68),
+          backgroundColor: const Color(0xFF8D7B68),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),

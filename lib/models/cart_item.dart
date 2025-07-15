@@ -11,6 +11,21 @@ class CartItem {
     required this.fragrance,
   });
 
+  // --- METHOD copyWith YANG DIMINTA ---
+  // Method ini membuat salinan objek CartItem dengan nilai yang bisa diubah.
+  CartItem copyWith({
+    String? id,
+    int? quantity,
+    Fragrance? fragrance,
+  }) {
+    return CartItem(
+      id: id ?? this.id,
+      quantity: quantity ?? this.quantity,
+      fragrance: fragrance ?? this.fragrance,
+    );
+  }
+  // ------------------------------------
+
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
       id: json['id'].toString(),
