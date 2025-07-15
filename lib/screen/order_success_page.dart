@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart'; // Untuk navigasi kembali ke home
+import 'home_screen.dart'; // Import HomeScreen untuk navigasi
 
 class OrderSuccessPage extends StatelessWidget {
   const OrderSuccessPage({super.key});
@@ -13,7 +13,11 @@ class OrderSuccessPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle_outline, color: Colors.green, size: 100),
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 100,
+              ),
               const SizedBox(height: 24),
               const Text(
                 'Pesanan Berhasil!',
@@ -22,14 +26,15 @@ class OrderSuccessPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Terima kasih telah berbelanja. Pesanan Anda sedang kami proses dan akan segera dikirimkan.',
+                'Terima kasih telah berbelanja. Pesanan Anda sedang kami proses.',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
               ElevatedButton(
+                // --- MODIFIKASI DI SINI ---
                 onPressed: () {
-                  // Kembali ke home dan hapus semua halaman sebelumnya
+                  // Kembali ke home dan hapus semua halaman sebelumnya dari tumpukan navigasi
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -41,7 +46,7 @@ class OrderSuccessPage extends StatelessWidget {
                   backgroundColor: const Color(0xFFD4AF37),
                   foregroundColor: Colors.black,
                 ),
-                child: const Text('Kembali ke Home'),
+                child: const Text('Kembali ke Beranda'), // Ganti teks tombol
               ),
             ],
           ),

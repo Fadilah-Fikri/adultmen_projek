@@ -25,6 +25,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   String? _selectedPaymentMethod;
   Map<String, dynamic>? _selectedAddress;
   bool _isLoadingAddress = true;
+  bool _isProcessingPayment = false; // State untuk loading tombol bayar
 
   final List<Map<String, dynamic>> _paymentMethods = [
     {'name': 'BCA Virtual Account', 'icon': Icons.account_balance_wallet},
@@ -67,7 +68,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(
-        // --- PERBAIKAN KESALAHAN KETIK ADA DI SINI ---
         builder: (context) => const AddressPage(isSelectionMode: true),
       ),
     );
@@ -83,13 +83,65 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(price);
   }
 
-  void _processPayment() {
-    Provider.of<CartProvider>(context, listen: false).clearCart();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const OrderSuccessPage()),
-      (route) => false,
-    );
+  // --- INI ADALAH FUNGSI PEMBAYARAN YANG BENAR ---
+  Future<void> _processPayment() async {
+    if (_selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pilih alamat pengiriman!'), backgroundColor: Colors.red));
+      return;
+    }
+    if (_selectedPaymentMethod == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pilih metode pembayaran!'), backgroundColor: Colors.red));
+      return;
+    }
+
+    setState(() => _isProcessingPayment = true);
+
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser!.id;
+
+    try {
+      // Langkah 1: Simpan data ke tabel 'orders'
+      final orderData = {
+        'user_id': userId,
+        'total_price': widget.totalPrice + 15000, // Harga total + ongkir
+        'shipping_address': _selectedAddress!,
+        'payment_method': _selectedPaymentMethod!,
+        'status': 'Pesanan Diproses', // Status sudah diubah
+      };
+
+      final newOrder = await supabase.from('orders').insert(orderData).select().single();
+      final orderId = newOrder['id'];
+
+      // Langkah 2: Siapkan dan simpan data ke tabel 'order_items'
+      final orderItems = widget.cartItems.map((cartItem) {
+        return {
+          'order_id': orderId,
+          'fragrance_id': cartItem.fragrance.id,
+          'quantity': cartItem.quantity,
+          'price': cartItem.fragrance.price,
+        };
+      }).toList();
+
+      await supabase.from('order_items').insert(orderItems);
+
+      // Langkah 3: Jika berhasil, kosongkan keranjang dan navigasi
+      if (mounted) {
+        Provider.of<CartProvider>(context, listen: false).clearCart();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const OrderSuccessPage()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal membuat pesanan: $e'), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingPayment = false);
+      }
+    }
   }
 
   @override
@@ -109,7 +161,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           children: [
             _buildShippingAddressSection(),
             const SizedBox(height: 24),
-            
             const Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Card(
@@ -129,7 +180,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ),
             const SizedBox(height: 24),
-
             const Text('Metode Pembayaran', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Card(
@@ -175,17 +225,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Text(_formatPrice(grandTotal), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepOrange)),
             ]),
             const SizedBox(height: 16),
-            
             ElevatedButton(
-              onPressed: _selectedAddress == null || _selectedPaymentMethod == null 
+              onPressed: _isProcessingPayment || _selectedAddress == null || _selectedPaymentMethod == null 
                   ? null 
-                  : _processPayment,
+                  : _processPayment, // Panggil fungsi _processPayment yang benar
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: const Color(0xFFD4AF37),
                 foregroundColor: Colors.black,
               ),
-              child: const Text('Bayar Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: _isProcessingPayment
+                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black))
+                  : const Text('Bayar Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),

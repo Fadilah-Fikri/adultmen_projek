@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'addresses_page.dart';
 import 'favorites_page.dart';
 import 'package:adultmen_uas/services/favorite_service.dart';
+import 'package:adultmen_uas/services/cart_service.dart'; // <-- 1. TAMBAHKAN IMPORT CART
+import 'order_page.dart';                                // <-- 1. TAMBAHKAN IMPORT ORDERS
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -348,13 +350,19 @@ class _ProfilePageState extends State<ProfilePage> {
     return Card(
       elevation: 5.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
-      clipBehavior: Clip.antiAlias, // Ensures content respects the border radius
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
+          // --- 2. MODIFIKASI TOMBOL PESANAN SAYA ---
           _buildMenuItem(
             icon: Icons.shopping_bag_outlined,
             title: 'Pesanan Saya',
-            onTap: () => _showComingSoon('Halaman Pesanan Saya'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const OrdersPage()),
+              );
+            },
           ),
           const Divider(height: 1),
           _buildMenuItem(
@@ -423,7 +431,10 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       onPressed: () async {
         await Supabase.instance.client.auth.signOut();
-        FavoriteService.clearFavorites(); 
+        // --- 3. TAMBAHKAN CLEAR CART SAAT LOGOUT ---
+        FavoriteService.clearFavorites();
+        CartService.clearCart(); 
+        
         if (mounted) {
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         }
