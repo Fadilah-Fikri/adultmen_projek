@@ -1,87 +1,74 @@
-// lib/providers/cart_provider.dart
-
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:adultmen_uas/models/fragrance.dart';
+import 'package:adultmen_uas/models/cart_item.dart';
 
 class CartProvider with ChangeNotifier {
-  final List<Fragrance> _items = [];
-  bool _isCartLoaded = false;
+  final Map<String, CartItem> _items = {};
 
-  List<Fragrance> get items => _items;
-  int get itemCount => _items.length;
+  Map<String, CartItem> get items => {..._items};
 
-  CartProvider() {
-    loadCartFromLocal();
+  int get itemCount {
+    return _items.values.fold(0, (sum, item) => sum + item.quantity);
   }
 
-  Future<void> loadCartFromLocal() async {
-  if (_isCartLoaded) return;
-
-  final prefs = await SharedPreferences.getInstance();
-  final String? cartString = prefs.getString('cart_items');
-  
-  if (cartString == null) {
-    _isCartLoaded = true;
-    return;
-  }
-
-  final List<dynamic> productIds = jsonDecode(cartString);
-  if (productIds.isEmpty) {
-    _isCartLoaded = true;
-    return;
-  }
-
-  try {
-    // --- ALTERNATIF DIMULAI DI SINI ---
-    // 1. Buat filter string dari list productIds
-    // Hasilnya akan seperti: "id.eq.uuid1,id.eq.uuid2,id.eq.uuid3"
-    final orFilter = productIds.map((id) => 'id.eq.$id').join(',');
-
-    // 2. Gunakan filter string tersebut di dalam metode .or()
-    final response = await Supabase.instance.client
-        .from('fragrances')
-        .select()
-        .or(orFilter); // Gunakan .or() sebagai pengganti .in_()
-    // --- AKHIR ALTERNATIF ---
-
-    _items.clear();
-    _items.addAll(response.map((item) => Fragrance.fromJson(item)).toList());
-    
-    _isCartLoaded = true;
-    notifyListeners();
-  } catch (e) {
-    debugPrint("Error memuat keranjang dari Supabase: $e");
-  }
-}
-  Future<void> _saveCartToLocal() async {
-    final prefs = await SharedPreferences.getInstance();
-    
-    // --- PERBAIKAN UTAMA DI SINI ---
-    // Variabel 'items' diubah menjadi 'item' dan nama List diubah menjadi 'productIds'
-    final List<String> productIds = _items.map((item) => item.id).toList();
-    await prefs.setString('cart_items', jsonEncode(productIds));
+  double get totalPrice {
+    var total = 0.0;
+    _items.forEach((key, cartItem) {
+      total += cartItem.fragrance.price * cartItem.quantity;
+    });
+    return total;
   }
 
   void addToCart(Fragrance fragrance) {
-    if (!_items.any((item) => item.id == fragrance.id)) {
-      _items.add(fragrance);
-      _saveCartToLocal();
-      notifyListeners();
+    if (_items.containsKey(fragrance.id)) {
+      // Jika sudah ada, tambah kuantitasnya
+      _items.update(
+        fragrance.id,
+        (existingItem) => CartItem(
+          id: existingItem.id,
+          fragrance: existingItem.fragrance,
+          quantity: existingItem.quantity + 1,
+        ),
+      );
+    } else {
+      // Jika belum ada, tambahkan item baru
+      _items.putIfAbsent(
+        fragrance.id,
+        () => CartItem(
+          id: DateTime.now().toString(), // ID unik untuk item keranjang
+          fragrance: fragrance,
+          quantity: 1,
+        ),
+      );
     }
+    notifyListeners(); // Beri tahu widget bahwa ada perubahan
   }
 
-  void removeFromCart(Fragrance fragrance) {
-    _items.removeWhere((item) => item.id == fragrance.id);
-    _saveCartToLocal();
+  void removeFromCart(String fragranceId) {
+    _items.remove(fragranceId);
+    notifyListeners();
+  }
+  
+  void updateQuantity(String fragranceId, int newQuantity) {
+    if (!_items.containsKey(fragranceId)) return;
+
+    if (newQuantity <= 0) {
+      removeFromCart(fragranceId);
+    } else {
+       _items.update(
+        fragranceId,
+        (existingItem) => CartItem(
+          id: existingItem.id,
+          fragrance: existingItem.fragrance,
+          quantity: newQuantity,
+        ),
+      );
+    }
     notifyListeners();
   }
 
   void clearCart() {
     _items.clear();
-    _saveCartToLocal();
     notifyListeners();
   }
 }

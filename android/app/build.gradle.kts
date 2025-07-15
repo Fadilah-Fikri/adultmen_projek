@@ -56,11 +56,16 @@ android {
     }
 
     buildTypes {
-        // Gunakan getByName("release") untuk mengkonfigurasi build type yang sudah ada
-        getByName("release") {
-            // Mengatur agar build type 'release' menggunakan konfigurasi 'release' yang telah dibuat di atas.
-            signingConfig = signingConfigs.getByName("release")
-        }
+       release {
+        // Gunakan sintaksis Kotlin dengan "=" dan tanda kurung "()"
+        signingConfig = signingConfigs.getByName("debug")
+        isMinifyEnabled = true
+        isShrinkResources = true
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+    }
     }
     // --- AKHIR BLOK YANG DIPERBAIKI ---
 }

@@ -1,7 +1,7 @@
 import 'package:adultmen_uas/models/fragrance.dart';
 
 class CartItem {
-  final String id; // ID dari item di tabel cart_items
+  final String id; // ID unik untuk setiap entri di keranjang
   final int quantity;
   final Fragrance fragrance;
 

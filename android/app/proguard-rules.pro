@@ -1,0 +1,2 @@
+-keep class io.supabase.** { *; }
+-keep class kotlin.coroutines.** { *; }
