@@ -123,89 +123,85 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget _buildProductGrid() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(child: Text(_error!));
-    }
-
-    if (_filteredFragrances.isEmpty) {
-      return const Center(
-        child: Text(
-          'Produk tidak ditemukan.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(16.0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        // Saya sesuaikan kembali agar layout terlihat bagus dengan tombol
-        crossAxisCount: 4, 
-        crossAxisSpacing:8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.87, // Disesuaikan untuk memberi ruang pada tombol
-      ),
-      itemCount: _filteredFragrances.length,
-      itemBuilder: (context, index) {
-        final fragrance = _filteredFragrances[index];
-        // --- 3. MODIFIKASI ITEMBUILDER UNTUK MENAMBAHKAN TOMBOL ---
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductDetailPage(fragrance: fragrance),
-                    ),
-                  );
-                },
-                child: FragranceCard(
-                  id: fragrance.id,
-                  name: fragrance.name,
-                  desc: fragrance.desc,
-                  imageUrl: fragrance.imageUrl,
-                  price: fragrance.price,
-                  category: fragrance.category,
-
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Panggil method addToCart dari CartProvider
-                  Provider.of<CartProvider>(context, listen: false).addToCart(fragrance);
-                  
-                  // Tampilkan notifikasi
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${fragrance.name} ditambahkan ke keranjang!'),
-                      duration: const Duration(seconds: 1),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.add_shopping_cart, size: 16),
-                label: const Text('Add to Cart'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  textStyle: const TextStyle(fontSize: 12),
-                ),
-              ),
-            )
-          ],
-        );
-      },
-    );
+   Widget _buildProductGrid() {
+ if (_isLoading) {
+   return const Center(child: CircularProgressIndicator());
   }
+
+  if (_error != null) {
+   return Center(child: Text(_error!));
+  }
+
+  if (_filteredFragrances.isEmpty) {
+   return const Center(
+    child: Text(
+     'Produk tidak ditemukan.',
+     style: TextStyle(fontSize: 16, color: Colors.grey),
+    ),
+   );
+   }
+
+  return GridView.builder(
+   padding: const EdgeInsets.all(16.0),
+   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+    // --- PERUBAHAN UTAMA UNTUK TAMPILAN SMARTPHONE ---
+    crossAxisCount: 2, //  оптимальный вариант - 2 колонки для мобильных устройств
+    crossAxisSpacing: 12, // Sedikit ruang ekstra antar item
+    mainAxisSpacing: 12,  // Sedikit ruang ekstra antar item
+    childAspectRatio: 0.7, // Sesuaikan rasio agar kartu produk tidak terlalu lebar
+   ),
+   itemCount: _filteredFragrances.length,
+   itemBuilder: (context, index) {
+    final fragrance = _filteredFragrances[index];
+    return Column(
+     crossAxisAlignment: CrossAxisAlignment.stretch,
+     children: [
+      Expanded(
+       child: GestureDetector(
+        onTap: () {
+         Navigator.push(
+          context,
+          MaterialPageRoute(
+           builder: (context) => ProductDetailPage(fragrance: fragrance),
+          ),
+         );
+        },
+        child: FragranceCard(
+         id: fragrance.id,
+         name: fragrance.name,
+         desc: fragrance.desc,
+         imageUrl: fragrance.imageUrl,
+         price: fragrance.price,
+         category: fragrance.category,
+        ),
+       ),
+      ),
+      const SizedBox(height: 8),
+      Padding(
+       padding: const EdgeInsets.symmetric(horizontal: 4.0),
+       child: ElevatedButton.icon(
+        onPressed: () {
+         Provider.of<CartProvider>(context, listen: false).addToCart(fragrance);
+         ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+           content: Text('${fragrance.name} ditambahkan ke keranjang!'),
+           duration: const Duration(seconds: 1),
+           behavior: SnackBarBehavior.floating,
+          ),
+         );
+        },
+        icon: const Icon(Icons.add_shopping_cart, size: 16),
+        label: const Text('Add to Cart'),
+        style: ElevatedButton.styleFrom(
+         padding: const EdgeInsets.symmetric(vertical: 8),
+         // --- (OPSIONAL) PERUBAHAN UKURAN FONT TOMBOL ---
+         textStyle: const TextStyle(fontSize: 14), // Sedikit lebih besar agar mudah dibaca
+        ),
+       ),
+      )
+     ],
+    );
+   },
+ );
+ }
 }
